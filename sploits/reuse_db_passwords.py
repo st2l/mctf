@@ -9,7 +9,7 @@ from typing import Iterable
 import psycopg
 
 # --- CONFIG ---
-DB_HOST = "127.0.0.1"
+DB_HOST = "51.250.11.17"
 DB_PORT = 5432
 DB_USER = "postgres"
 DB_PASS = "cowwithballs"
