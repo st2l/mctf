@@ -1,0 +1,10 @@
+python-dotenv
+gunicorn
+jsonpath
+flask
+mongoengine
+PyJWT
+pyzbar
+Pillow
+python-dateutil
+cryptography

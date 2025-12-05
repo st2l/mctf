@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#050505">
+        <title>{% block title %}CYBERNODE{% endblock %} - TERMINAL ACCESS</title>
+        {% block stylesheets %}
+            <link rel="stylesheet" href="/assets/main.css">
+        {% endblock %}
+        {% block javascripts %}
+            <script src="/assets/main.js"></script>
+        {% endblock %}
+    </head>
+    <body>
+        <header>
+            <nav class="navbar">
+                <div class="status-indicator status-online"></div>
+                {% if app.session.get('user_id') %}
+                    <a href="{{ path('app_profile') }}">PROFILE</a>
+                    <a href="{{ path('app_logout') }}">LOGOUT</a>
+                {% else %}
+                    <a href="{{ path('app_login') }}">LOGIN</a>
+                    <a href="{{ path('app_signup') }}">SIGNUP</a>
+                {% endif %}
+                <a href="{{ path('board_list') }}">MAIN.TERMINAL</a>
+                {% if boards is defined %}
+                    {% for board in boards %}
+                        <a href="{{ path('board_show', {slug: board.slug}) }}">{{ board.slug|upper }}</a>
+                    {% endfor %}
+                {% endif %}
+                <div class="status-indicator status-online"></div>
+            </nav>
+        </header>
+
+        <main class="container">
+            {% block body %}{% endblock %}
+        </main>
+
+        <footer class="site-footer">
+            <p>CONNECTION ESTABLISHED {{ "now"|date("Y.m.d H:i:s") }} UTC</p>
+        </footer>
+    </body>
+</html>

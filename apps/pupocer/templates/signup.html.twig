@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}OPERATOR.REGISTRATION{% endblock %}
+
+{% block body %}
+<div class="registration-terminal">
+    <div class="terminal-header">
+        <h1 class="page-title">OPERATOR.REGISTRATION</h1>
+        <div class="terminal-status">
+            <div class="status-indicator status-offline"></div>
+            <span class="terminal-info">NEW USER INITIALIZATION PROTOCOL</span>
+            <div class="status-indicator status-offline"></div>
+        </div>
+    </div>
+
+    <div class="board-list">
+        <div class="registration-container">
+            <div class="registration-warning">
+                <p class="terminal-text">>>> NETWORK ACCESS REGISTRATION</p>
+                <p class="terminal-subtext">CREATING NEW OPERATOR CREDENTIALS</p>
+                <p class="terminal-subtext">WARNING: ALL ACTIVITIES WILL BE MONITORED</p>
+            </div>
+
+            <form method="POST" action="{{ path('app_signup') }}" class="cyber-form registration-form">
+                <div class="form-group">
+                    <label for="username" class="form-label">OPERATOR_ID:</label>
+                    <input type="text" id="username" name="username" class="cyber-input" placeholder="CHOOSE UNIQUE IDENTIFIER" required>
+                    <small class="form-hint">ALPHANUMERIC CHARACTERS ONLY</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">ACCESS_CIPHER:</label>
+                    <input type="password" id="password" name="password" class="cyber-input" placeholder="CREATE SECURITY SEQUENCE" required>
+                    <small class="form-hint">MINIMUM 8 CHARACTERS RECOMMENDED</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label">VERIFY_CIPHER:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="cyber-input" placeholder="CONFIRM SECURITY SEQUENCE" required>
+                    <small class="form-hint">MUST MATCH ACCESS_CIPHER</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="cyber-button primary registration-button">
+                        >>> INITIALIZE OPERATOR ACCOUNT
+                    </button>
+                </div>
+            </form>
+
+            <div class="registration-footer">
+                <div class="security-notice">
+                    <div class="status-indicator status-online"></div>
+                    <span class="terminal-subtext">QUANTUM ENCRYPTION ENABLED</span>
+                </div>
+                <p class="terminal-subtext">BY PROCEEDING, YOU AGREE TO NETWORK TERMS</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

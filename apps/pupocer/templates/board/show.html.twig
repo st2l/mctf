@@ -1,0 +1,272 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}TERMINAL://{{ board.slug|upper }}{% endblock %}
+
+{% block body %}
+<div class="board-header">
+{# <script src="{{ asset('assets/main.js') }}"></script>
+<script src="{{ asset('assets/main.js') }}"></script> #}
+    <h1 class="page-title">{{ board.slug|upper }}.NODE</h1>
+    <div class="terminal-status">
+        <div class="status-indicator status-online"></div>
+        <span class="terminal-info">{{ board.title|upper }} // ACTIVE CHANNEL</span>
+        <div class="status-indicator status-online"></div>
+    </div>
+    {% if app.session.get('user_id') %}
+    <div class="board-actions">
+        <button type="button" class="cyber-button" onclick="toggleThreadForm()">+ INITIALIZE NEW THREAD</button>
+    </div>
+    {% else %}
+    <div class="board-actions">
+        <span class="terminal-info">>>> LOGIN REQUIRED TO INITIALIZE THREADS</span>
+    </div>
+    {% endif %}
+</div>
+
+{% if app.session.get('user_id') %}
+<div id="new-thread-form" class="thread-form-container" style="display: none;">
+    <div class="form-header">
+        <h3 class="form-title">>>> THREAD.INITIALIZATION.PROTOCOL</h3>
+        <button type="button" class="close-button" onclick="toggleThreadForm()">[X]</button>
+    </div>
+    
+    <form method="POST" action="{{ path('thread_new', {slug: board.slug}) }}" class="cyber-form">
+        <div class="form-group">
+            <label for="thread-title" class="form-label">THREAD.TITLE:</label>
+            <input type="text" id="thread-title" name="title" class="cyber-input" placeholder="ENTER THREAD IDENTIFIER" required maxlength="255">
+        </div>
+        
+        <div class="form-group">
+            <label for="thread-body" class="form-label">INITIAL.DATA.PACKET:</label>
+            <textarea id="thread-body" name="body" class="cyber-textarea" placeholder="TRANSMIT INITIAL DATA STREAM" required rows="6"></textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="cyber-button primary">
+                >>> INITIATE THREAD
+            </button>
+            <button type="button" class="cyber-button" onclick="toggleThreadForm()">
+                >>> CANCEL
+            </button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<div class="board-list">
+    {% if threads is empty %}
+        <div class="no-data-message">
+            <div class="status-indicator status-offline"></div>
+            <p class="terminal-text">NO ACTIVE THREADS DETECTED</p>
+            <p class="terminal-subtext">>>> INITIALIZE FIRST DATA STREAM</p>
+        </div>
+    {% else %}
+        {% for thread in threads %}
+            <div class="thread-container" id="thread-{{ thread.id }}">
+                <div class="thread-header">
+                    {% if thread.title %}
+                        <h3 class="thread-title">{{ thread.title|upper }}</h3>
+                    {% endif %}
+                    <div class="thread-meta">
+                        <span class="data-field">THREAD_ID: <span class="data-value">{{ thread.id }}</span></span>
+                        {% if thread.created_at is defined %}
+
+                        {% if thread.created_at is defined %}
+                                <span class="data-field">INITIATED: 
+                                <span class="data-value">{{ thread.created_at|date('Y.m.d H:i:s') }}</span>
+                        {% endif %}
+                            </span>
+                        {% endif %}
+                        <span class="data-field">LAST_SIGNAL: <span class="data-value">{{ thread.bumped_at|date('Y.m.d H:i:s') }}</span></span>
+                    </div>
+                </div>
+                
+                <div class="data-stream">
+                    {% for post in thread.posts %}
+                        {% if post.parent_post_id is null %}
+                            <div class="data-packet {% if loop.first %}origin-packet{% endif %}" id="post-{{ post.id }}">
+                                <div class="packet-header">
+                                    <span class="packet-id">NODE_{{ post.id }}</span>
+                                    <span class="packet-author">{{ post.username ?? 'ANON' }}</span>
+                                    {% if post.created_at is defined %}
+                                        <span class="packet-timestamp">{{ post.created_at|date('H:i:s') }}</span>
+                                    {% endif %}
+                                    <a href="#post-{{ post.id }}" class="packet-link">[LINK]</a>
+                                    {% if post.is_private %}
+                                        <span class="private-indicator">[PRIVATE]</span>
+                                    {% endif %}
+                                </div>
+                                <div class="packet-data">
+                                    {{ post.body|nl2br }}
+                                </div>
+                                
+                                {% if app.session.get('user_id') %}
+                                <div class="reply-controls">
+                                    <button type="button" class="cyber-button small" onclick="toggleReplyForm({{ post.id }})">
+                                        >>> TRANSMIT REPLY
+                                    </button>
+                                </div>
+                                
+                                <div id="reply-form-{{ post.id }}" class="reply-form-container" style="display: none;">
+                                    <form method="POST" action="{{ path('reply_submit', {slug: board.slug, threadId: thread.id}) }}" class="cyber-form">
+                                        <input type="hidden" name="parent_post_id" value="{{ post.id }}">
+                                        <div class="form-group">
+                                            <textarea name="body" class="cyber-textarea" placeholder="TRANSMIT REPLY DATA" required rows="3"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <input type="checkbox" name="is_private" value="1">
+                                                MARK AS PRIVATE
+                                            </label>
+                                        </div>
+                                        <div class="form-actions">
+                                            <button type="submit" class="cyber-button primary small">
+                                                >>> SEND REPLY
+                                            </button>
+                                            <button type="button" class="cyber-button small" onclick="toggleReplyForm({{ post.id }})">
+                                                >>> CANCEL
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                {% endif %}
+                                
+                                {# Show replies to this post #}
+                                {% set replies = [] %}
+                                {% for reply in thread.posts %}
+                                    {% if reply.parent_post_id == post.id %}
+                                        {% set replies = replies|merge([reply]) %}
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if replies|length > 0 %}
+                                <div class="reply-stream">
+                                    {% for reply in replies %}
+                                        <div class="data-packet reply-packet" id="post-{{ reply.id }}">
+                                            <div class="packet-header">
+                                                <span class="packet-id">NODE_{{ reply.id }}</span>
+                                                <span class="packet-author">{{ reply.username ?? 'ANON' }}</span>
+                                                {% if reply.created_at is defined %}
+                                                    <span class="packet-timestamp">{{ reply.created_at|date('H:i:s') }}</span>
+                                                {% endif %}
+                                                <a href="#post-{{ reply.id }}" class="packet-link">[LINK]</a>
+                                                {% if reply.is_private %}
+                                                    <span class="private-indicator">[PRIVATE]</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="packet-data">
+                                                {{ reply.body|nl2br }}
+                                            </div>
+                                            
+                                            {% if app.session.get('user_id') %}
+                                            <div class="reply-controls">
+                                                <button type="button" class="cyber-button small" onclick="toggleReplyForm({{ reply.id }})">
+                                                    >>> REPLY TO REPLY
+                                                </button>
+                                            </div>
+                                            
+                                            <div id="reply-form-{{ reply.id }}" class="reply-form-container" style="display: none;">
+                                                <form method="POST" action="{{ path('reply_submit', {slug: board.slug, threadId: thread.id}) }}" class="cyber-form">
+                                                    <input type="hidden" name="parent_post_id" value="{{ reply.id }}">
+                                                    <div class="form-group">
+                                                        <label class="form-label">REPLYING TO: {{ reply.username ?? 'ANON' }}</label>
+                                                        <textarea name="body" class="cyber-textarea" placeholder="TRANSMIT REPLY DATA" required rows="3"></textarea>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">
+                                                            <input type="checkbox" name="is_private" value="1">
+                                                            MARK AS PRIVATE
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-actions">
+                                                        <button type="submit" class="cyber-button primary small">
+                                                            >>> SEND REPLY
+                                                        </button>
+                                                        <button type="button" class="cyber-button small" onclick="toggleReplyForm({{ reply.id }})">
+                                                            >>> CANCEL
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {# Show nested replies recursively #}
+                                            {% set nested_replies = [] %}
+                                            {% for nested_reply in thread.posts %}
+                                                {% if nested_reply.parent_post_id == reply.id %}
+                                                    {% set nested_replies = nested_replies|merge([nested_reply]) %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if nested_replies|length > 0 %}
+                                            <div class="reply-stream nested">
+                                                {% for nested_reply in nested_replies %}
+                                                    <div class="data-packet reply-packet" id="post-{{ nested_reply.id }}">
+                                                        <div class="packet-header">
+                                                            <span class="packet-id">NODE_{{ nested_reply.id }}</span>
+                                                            <span class="packet-author">{{ nested_reply.username ?? 'ANON' }}</span>
+                                                            {% if nested_reply.created_at is defined %}
+                                                                <span class="packet-timestamp">{{ nested_reply.created_at|date('H:i:s') }}</span>
+                                                            {% endif %}
+                                                            <a href="#post-{{ nested_reply.id }}" class="packet-link">[LINK]</a>
+                                                            {% if nested_reply.is_private %}
+                                                                <span class="private-indicator">[PRIVATE]</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="packet-data">
+                                                            {{ nested_reply.body|nl2br }}
+                                                        </div>
+                                                        
+                                                        {% if app.session.get('user_id') %}
+                                                        <div class="reply-controls">
+                                                            <button type="button" class="cyber-button small" onclick="toggleReplyForm({{ nested_reply.id }})">
+                                                                >>> REPLY TO REPLY
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        <div id="reply-form-{{ nested_reply.id }}" class="reply-form-container" style="display: none;">
+                                                            <form method="POST" action="{{ path('reply_submit', {slug: board.slug, threadId: thread.id}) }}" class="cyber-form">
+                                                                <input type="hidden" name="parent_post_id" value="{{ nested_reply.id }}">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">REPLYING TO: {{ nested_reply.username ?? 'ANON' }}</label>
+                                                                    <textarea name="body" class="cyber-textarea" placeholder="TRANSMIT REPLY DATA" required rows="3"></textarea>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label class="form-label">
+                                                                        <input type="checkbox" name="is_private" value="1">
+                                                                        MARK AS PRIVATE
+                                                                    </label>
+                                                                </div>
+                                                                <div class="form-actions">
+                                                                    <button type="submit" class="cyber-button primary small">
+                                                                        >>> SEND REPLY
+                                                                    </button>
+                                                                    <button type="button" class="cyber-button small" onclick="toggleReplyForm({{ nested_reply.id }})">
+                                                                        >>> CANCEL
+                                                                    </button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <div class="thread-controls">
+                    <span class="thread-stats">DATA_PACKETS: {{ thread.posts|length }}</span>
+                    <div class="status-indicator status-online"></div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

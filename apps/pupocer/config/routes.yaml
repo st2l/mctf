@@ -1,0 +1,19 @@
+health_route:
+    resource: '../src/Controller/HealthController.php'
+    type: annotation
+
+user_routes:
+    resource: '../src/Controller/UserController.php'
+    type: annotation
+
+board_routes:
+    resource: '../src/Controller/BoardController.php'
+    type: annotation
+
+thread_routes:
+    resource: '../src/Controller/ThreadController.php'
+    type: annotation
+
+reply_routes:
+    resource: '../src/Controller/ReplyController.php'
+    type: annotation

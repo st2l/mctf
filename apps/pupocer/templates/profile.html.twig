@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}USER.PROFILE.MATRIX{% endblock %}
+
+{% block body %}
+<div class="profile-terminal">
+    <div class="terminal-header">
+        <h1 class="page-title">USER.PROFILE.ACCESS</h1>
+        <div class="terminal-status">
+            <div class="status-indicator status-online"></div>
+            <span class="terminal-info">AUTHENTICATED SESSION ACTIVE</span>
+            <div class="status-indicator status-online"></div>
+        </div>
+    </div>
+
+    <div class="board-list">
+        <div class="profile-container">
+            <div class="profile-header">
+                <div class="user-status">
+                    <div class="status-indicator status-online"></div>
+                    <h2 class="user-identifier">OPERATOR: <span class="username-display">{{ username }}</span></h2>
+                </div>
+                <div class="access-level">
+                    <span class="data-field">ACCESS_LEVEL: <span class="data-value">VERIFIED</span></span>
+                    <span class="data-field">SESSION_STATUS: <span class="data-value">ACTIVE</span></span>
+                </div>
+            </div>
+
+            <div class="profile-data">
+                <div class="data-section">
+                    <h3 class="section-title">>>> SYSTEM STATUS</h3>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">ACCOUNT_INIT:</span>
+                            <span class="status-value success">SUCCESSFUL</span>
+                            <div class="status-indicator status-online"></div>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">PERMISSIONS:</span>
+                            <span class="status-value">STANDARD_USER</span>
+                            <div class="status-indicator status-online"></div>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">CONNECTION:</span>
+                            <span class="status-value">ENCRYPTED</span>
+                            <div class="status-indicator status-online"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <h3 class="section-title">>>> AVAILABLE OPERATIONS</h3>
+                    <div class="action-buttons">
+                        <a href="{{ path('app_logout') }}" class="cyber-button secondary">TERMINATE_SESSION</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-footer">
+                <p class="terminal-subtext">WELCOME TO THE NETWORK, OPERATOR</p>
+                <p class="terminal-subtext">>>> YOUR DIGITAL FOOTPRINT IS NOW ACTIVE</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

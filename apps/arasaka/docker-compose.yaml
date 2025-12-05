@@ -1,0 +1,63 @@
+name: arasaka_academy
+
+services:
+  app:
+    build:
+      context: .
+    depends_on:
+      - db
+    restart: unless-stopped
+    ports:
+      - "1337:1337"
+    environment:
+      TEAM_TOKEN: "AAAAAAAAAAAAAA" # insert your team token here
+    entrypoint: socat -T60 -v TCP4-LISTEN:1337,reuseaddr,fork,keepalive EXEC:./arasaka_academy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          pids: 128
+          memory: 128M
+    healthcheck:
+      test: [ "CMD-SHELL", "pidof socat" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  cleaner:
+    build: ./cleaner/
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 256M
+
+  db:
+    image: postgres:14.1-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "arasaka_academy"
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          pids: 128
+          memory: 128M
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d arasaka_academy" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgresql:

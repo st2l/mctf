@@ -1,0 +1,40 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "19576:80"
+    restart: unless-stopped
+    depends_on:
+      - backend    
+    networks:
+      - qrb
+
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    networks:
+      - qrb
+
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: qrb
+    volumes:
+      - db_data:/data/db
+    networks:
+      - qrb
+volumes:
+  db_data:
+
+networks:
+  qrb:
+    driver: bridge

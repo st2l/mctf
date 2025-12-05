@@ -1,0 +1,61 @@
+{# CYBERPUNK BOARD TERMINAL #}
+{% extends 'base.html.twig' %}
+
+{% block title %}SECURE.NODE://{{ board.title|upper }}{% endblock %}
+
+{% block body %}
+<div class="terminal-header">
+    <h1 class="page-title">{{ board.title|upper }}.DATASTREAM</h1>
+    <div class="terminal-status">
+        <div class="status-indicator status-online"></div>
+        <span class="terminal-info">SECURE CONNECTION ESTABLISHED</span>
+    </div>
+</div>
+
+<div class="board-list">
+    {# Active Data Streams #}
+    <section class="data-streams">
+        <h2 class="section-title">>>> ACTIVE DATA STREAMS</h2>
+        <div class="stream-list">
+            {% for thread in threads %}
+                <div class="stream-item">
+                    <div class="stream-header">
+                        <div class="status-indicator status-online"></div>
+                        <a href="{{ path('thread', {id: thread.id}) }}" class="stream-link">
+                            {{ thread.title ?: 'UNTITLED_STREAM' }}
+                        </a>
+                        <span class="stream-id">ID:{{ thread.id }}</span>
+                    </div>
+                    <div class="stream-meta">
+                        <span class="data-field">LAST_SIGNAL: <span class="data-value">{{ thread.bumped_at|date('Y.m.d H:i:s') }}</span></span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="no-data-message">
+                    <div class="status-indicator status-offline"></div>
+                    <p class="terminal-text">NO ACTIVE STREAMS DETECTED</p>
+                    <p class="terminal-subtext">>>> INITIALIZE FIRST CONNECTION</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# Initialize New Stream #}
+    <section class="stream-initializer">
+        <h3 class="subsection-title">INITIALIZE NEW DATA STREAM</h3>
+        <div class="terminal-form">
+            <form action="{{ path('create_thread', {slug: board.slug}) }}" method="post" class="cyber-form">
+                <div class="form-group">
+                    <label for="title" class="form-label">STREAM_IDENTIFIER:</label>
+                    <input type="text" id="title" name="title" class="cyber-input" placeholder="[OPTIONAL] ENTER STREAM NAME">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="cyber-button primary">
+                        >>> INITIATE STREAM
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

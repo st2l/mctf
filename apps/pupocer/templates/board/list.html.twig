@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Boards{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1 class="page-title">pupocer</h1>
+    
+    <div class="board-list">
+        <h2>Boards</h2>
+        <div class="boards-grid">
+            {% for board in boards %}
+                <div class="board-item" id="board-{{ board.id }}">
+                    <a href="{{ path('board_show', {slug: board.slug}) }}" class="board-link">
+                        <div class="board-slug">/{{ board.slug }}/</div>
+                        <div class="board-title">{{ board.title }}</div>
+                        {% if board.created_at is defined %}
+                            <div class="board-created">Created: {{ board.created_at|date('Y-m-d H:i') }}</div>
+                        {% endif %}
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

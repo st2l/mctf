@@ -1,0 +1,240 @@
+<!-- {% if exception is defined %}{% set _message = (exception.getMessage()|default(exception_message|default('An error occurred'))) ~ ' (' ~ (status_code|default(500)) ~ ' ' ~ (status_text|default('Internal Server Error')) ~ ')' %}{% else %}{% set _message = '500 Internal Server Error' %}{% endif %} -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta error_id=500>
+        <meta name="robots" content="noindex,nofollow,noarchive" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>{% if exception is defined %}{{ status_code|default(500) }} {{ status_text|default('Internal Server Error') }}{% else %}ERROR 500 - Internal Server Error{% endif %}</title>
+        <link rel="stylesheet" href="/assets/main.css">
+        <link rel="stylesheet" href="/assets/exception.css">
+    </head>
+    <body>
+        <header>
+            <nav class="navbar">
+                <div class="status-indicator status-offline"></div>
+                <span>{% if exception is defined %}EXCEPTION HANDLER{% else %}ERROR HANDLER{% endif %}</span>
+                <div class="status-indicator status-offline"></div>
+            </nav>
+        </header>
+
+        <main class="container">
+            {% if exception is defined %}
+                {% set exceptionMsg = exception.getMessage()|default(exception_message|default(exception.message|default('An error occurred'))) %}
+                <div class="exception-summary {% if not exceptionMsg %}exception-without-message{% endif %}">
+                    <div class="exception-metadata">
+                        <div class="exception-hierarchy">
+                            {% set previousExceptions = exception.getAllPrevious()|reverse %}
+                            {% for previous in previousExceptions %}
+                                <a href="#trace-box-{{ loop.index + 1 }}">{{ previous.class|split('\\')|last }}</a>
+                                <span class="separator">>>></span>
+                            {% endfor %}
+                            <a href="#trace-box-1">{{ exception.class|split('\\')|last }}</a>
+                        </div>
+                        <div class="exception-http">
+                            HTTP {{ status_code|default(500) }} <small>{{ status_text|default('Internal Server Error') }}</small>
+                        </div>
+                    </div>
+
+                    <div class="exception-message-wrapper">
+                        <h1 class="exception-message {% if exceptionMsg|length > 180 %}long{% endif %}">
+                            {{ exceptionMsg|nl2br|raw }}
+                        </h1>
+                    </div>
+                </div>
+
+                <div class="exception-tabs">
+                    <div class="tab">
+                        <h3 class="tab-title">
+                            {% set exceptionArray = exception.toArray %}
+                            {% if exceptionArray|length > 1 %}
+                                Exceptions <span class="badge">{{ exceptionArray|length }}</span>
+                            {% else %}
+                                Exception
+                            {% endif %}
+                        </h3>
+                        <div class="tab-content">
+                            {% set exceptionWithUserCode = [] %}
+                            {% set lastIndex = exceptionArray|length - 1 %}
+                            {% for i, e in exceptionArray %}
+                                {% for trace in e.trace %}
+                                    {% if trace.file and '/vendor/' not in trace.file and '/var/cache/' not in trace.file and i < lastIndex %}
+                                        {% if i not in exceptionWithUserCode %}
+                                            {% set exceptionWithUserCode = exceptionWithUserCode|merge([i]) %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                            
+                            {% for i, e in exceptionArray %}
+                                <div class="trace-box" id="trace-box-{{ i + 1 }}">
+                                    <div class="trace-head">
+                                        <h3 class="trace-class">
+                                            <span class="trace-namespace">
+                                                {% set classParts = e.class|split('\\') %}
+                                                {% if classParts|length > 1 %}
+                                                    {{ classParts|slice(0, -1)|join('\\') }}\
+                                                {% endif %}
+                                            </span>
+                                            {{ classParts|last }}
+                                        </h3>
+                                        {% if e.message and i > 0 %}
+                                            <p class="trace-message">{{ e.message|escape }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="trace-content">
+                                        {% set isFirstUserCode = true %}
+                                        {% for j, trace in e.trace %}
+                                            {% set isVendorTrace = trace.file and ('/vendor/' in trace.file or '/var/cache/' in trace.file) %}
+                                            {% set displayCodeSnippet = isFirstUserCode and not isVendorTrace %}
+                                            {% if displayCodeSnippet %}
+                                                {% set isFirstUserCode = false %}
+                                            {% endif %}
+                                            <div class="trace-line {% if isVendorTrace %}trace-from-vendor{% endif %}">
+                                                <div class="trace-line-header">
+                                                    {% if not isVendorTrace and trace.function %}
+                                                        <span class="trace-class">{{ trace.class|split('\\')|last }}</span>
+                                                        {% if trace.type %}<span class="trace-type">{{ trace.type }}</span>{% endif %}
+                                                        <span class="trace-method">{{ trace.function }}</span>
+                                                        {% if trace.args is defined %}
+                                                            <span class="trace-arguments">({{ trace.args|slice(0, 3)|map(a => a|json_encode|slice(0, 50))|join(', ') }}{% if trace.args|length > 3 %}...{% endif %})</span>
+                                                        {% endif %}
+                                                    {% endif %}
+
+                                                    {% if trace.file %}
+                                                        {% set lineNumber = trace.line ?: 1 %}
+                                                        {% set filePath = trace.file|split('/') %}
+                                                        <span class="trace-file-path">
+                                                            in
+                                                            <a href="file://{{ trace.file }}#L{{ lineNumber }}" class="trace-file-link">
+                                                                {{ filePath|slice(0, -1)|join('/') }}/<strong>{{ filePath|last }}</strong>
+                                                            </a>
+                                                            {% if isVendorTrace and trace.function %}
+                                                                <span class="trace-type">{{ trace.type }}</span>
+                                                                <span class="trace-method">{{ trace.function }}</span>
+                                                            {% endif %}
+                                                            (line {{ lineNumber }})
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                {% if trace.file and displayCodeSnippet %}
+                                                    <div class="trace-code">
+                                                        <pre class="code-snippet"><code>// Code excerpt not available in Twig template
+// File: {{ trace.file }}
+// Line: {{ lineNumber }}</code></pre>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if logger is defined %}
+                    <div class="tab">
+                        <h3 class="tab-title {% if not logger.logs %}disabled{% endif %}">
+                            Logs
+                            {% if logger.countErrors() > 0 %}
+                                <span class="badge status-error">{{ logger.countErrors() }}</span>
+                            {% endif %}
+                        </h3>
+                        <div class="tab-content {% if not logger.logs %}hidden{% endif %}">
+                            {% if logger.logs %}
+                                <table class="logs-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Level</th>
+                                            <th>Time</th>
+                                            <th>Message</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for log in logger.logs %}
+                                            {% set status = log.priority >= 400 ? 'error' : (log.priority >= 300 ? 'warning' : 'normal') %}
+                                            <tr class="status-{{ status }}">
+                                                <td class="log-level">{{ log.priorityName }}</td>
+                                                <td class="log-time">{{ log.timestamp|date('H:i:s') }}</td>
+                                                <td class="log-message">
+                                                    {{ log.message|escape }}
+                                                    {% if log.context %}
+                                                        <pre class="log-context">{{ log.context|json_encode(constant('JSON_PRETTY_PRINT'))|escape }}</pre>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <div class="empty">No log messages</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="tab">
+                        <h3 class="tab-title">
+                            {% if exceptionArray|length > 1 %}
+                                Stack Traces <span class="badge">{{ exceptionArray|length }}</span>
+                            {% else %}
+                                Stack Trace
+                            {% endif %}
+                        </h3>
+                        <div class="tab-content">
+                            {% for i, e in exceptionArray %}
+                                <div class="stacktrace-box">
+                                    <h4 class="stacktrace-title">
+                                        {% if exceptionArray|length > 1 %}
+                                            <span class="text-muted">[{{ exceptionArray|length - i }}/{{ exceptionArray|length }}]</span>
+                                        {% endif %}
+                                        {{ e.class|split('\\')|last }}
+                                    </h4>
+                                    <pre class="stacktrace">{{ e.class }}:
+{% set eMsg = e.message|default('') %}
+{% if eMsg %}{{ eMsg }}
+{% endif %}
+{% for trace in e.trace %}
+  at {{ trace.class }}{{ trace.type }}{{ trace.function }}({% if trace.args is defined %}{{ trace.args|slice(0, 2)|map(a => a|json_encode|slice(0, 30))|join(', ') }}{% if trace.args|length > 2 %}...{% endif %}{% endif %})
+{% if trace.file %}     ({{ trace.file }}:{{ trace.line }})
+{% endif %}{% endfor %}</pre>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="exception-summary">
+                    <div class="exception-metadata">
+                        <div class="exception-http">
+                            HTTP 500 <small>Internal Server Error</small>
+                        </div>
+                    </div>
+
+                    <div class="exception-message-wrapper">
+                        <h1 class="exception-message">
+                            >>> SYSTEM ERROR DETECTED <<<
+                        </h1>
+                        <div class="error-description">
+                            <p class="terminal-text">The server returned a "500 Internal Server Error".</p>
+                            <p class="terminal-subtext">Something is broken. Please let us know what you were doing when this error occurred.</p>
+                            <p class="terminal-subtext">We will fix it as soon as possible. Sorry for any inconvenience caused.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="error-actions">
+                    <a href="/" class="cyber-button">RETURN TO MAIN.TERMINAL</a>
+                </div>
+            {% endif %}
+        </main>
+
+        <footer class="site-footer">
+            <p>{% if exception is defined %}EXCEPTION{% else %}ERROR{% endif %} REPORTED {{ "now"|date("Y.m.d H:i:s") }} UTC</p>
+        </footer>
+    </body>
+</html>
+<!-- {% if exception is defined %}{{ _message }}{% else %}500 Internal Server Error{% endif %} -->
+

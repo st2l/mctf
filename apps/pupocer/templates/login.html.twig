@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}AUTHENTICATION.PROTOCOL{% endblock %}
+
+{% block body %}
+<div class="auth-terminal">
+    <div class="terminal-header">
+        <h1 class="page-title">AUTHENTICATION.REQUIRED</h1>
+        <div class="terminal-status">
+            <div class="status-indicator status-offline"></div>
+            <span class="terminal-info">UNAUTHORIZED ACCESS DETECTED</span>
+            <div class="status-indicator status-offline"></div>
+        </div>
+    </div>
+
+    <div class="board-list">
+        <div class="auth-container">
+            <div class="auth-warning">
+                <p class="terminal-text">>>> RESTRICTED ZONE</p>
+                <p class="terminal-subtext">PROVIDE VALID CREDENTIALS TO PROCEED</p>
+            </div>
+
+            <form method="POST" action="{{ path('app_login') }}" class="cyber-form auth-form">
+                {% if error is defined and error %}
+                    <div class="auth-error">
+                        <p class="terminal-text error">>>> AUTHENTICATION FAILED</p>
+                        {% if error is defined and error %}
+                            <p class="terminal-subtext error">{{ error }}</p>
+                        {% else %}
+                            <p class="terminal-subtext error">{{ error.messageKey|trans(error.messageData, 'security') }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="username" class="form-label">USER_ID:</label>
+                    <input type="text" id="username" name="username" class="cyber-input" placeholder="ENTER IDENTIFICATION CODE" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">ACCESS_KEY:</label>
+                    <input type="password" id="password" name="password" class="cyber-input" placeholder="ENTER AUTHORIZATION SEQUENCE" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="cyber-button primary auth-button">
+                        >>> INITIATE ACCESS PROTOCOL
+                    </button>
+                </div>
+            </form>
+
+            <div class="auth-footer">
+                <div class="status-indicator status-online"></div>
+                <span class="terminal-subtext">CONNECTION SECURED VIA QUANTUM ENCRYPTION</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

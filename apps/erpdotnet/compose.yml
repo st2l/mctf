@@ -1,0 +1,68 @@
+x-shared:
+  healthcheck: &healthcheck
+    test: ["CMD", "curl", "-f", "http://127.1:80/ping"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 5s
+
+  environment: &environment
+    POSTGRES_USER: ${POSTGRES_USER:-postgres}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    POSTGRES_DB: ${POSTGRES_DB:-dev}
+
+  service: &service
+    restart: unless-stopped
+    healthcheck: *healthcheck
+    environment: *environment
+
+name: erp
+services:
+  frontend:
+    <<: *service
+    build: "./frontend"
+    networks:
+      - external
+      - internal
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backend:
+    <<: *service
+    build: "./backend"
+    networks:
+      - internal
+    volumes:
+      - reports_data:/app/wwwroot/pdfs
+    environment:
+      <<: *environment
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-dev};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    <<: *service
+    image: postgres:16
+    networks:
+      - internal
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+
+volumes:
+  db_data:
+  reports_data:
+
+networks:
+  external:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: true

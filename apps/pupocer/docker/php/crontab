@@ -1,0 +1,4 @@
+*/7 * * * * cd /var/www/project && /usr/local/bin/php bin/console app:clean-db --env=prod >> /var/www/project/var/log/cleaner.log 2>&1
+*/15 * * * * rm -f /var/www/project/var/log/cleaner.log
+
+

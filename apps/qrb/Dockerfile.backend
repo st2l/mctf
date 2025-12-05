@@ -1,0 +1,18 @@
+FROM python:3.9-slim-trixie
+
+RUN apt-get update && apt-get install -y libzbar0 xxd
+
+WORKDIR /app
+
+COPY app app
+COPY requirements.txt .
+COPY example.env app/.env
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN sed -i "s/SECRET_KEY=.*/SECRET_KEY=$(xxd -l 20 -p /dev/urandom)/g" app/.env
+RUN sed -i "s/DEFAULT_PARTNER_PASSWORD=.*/DEFAULT_PARTNER_PASSWORD=$(xxd -l 20 -p /dev/urandom)/g" app/.env
+
+EXPOSE 8000
+
+CMD ["gunicorn", "-w", "4", "--bind", "0.0.0.0:8000", "app:create_app()"]
