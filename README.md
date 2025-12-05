@@ -23,3 +23,9 @@ kyOQVEbLutp77o
 
 
 надо патч - /opt/mctf/apps
+
+---
+
+packmate
+
+nigga : vrot
