@@ -27,7 +27,7 @@ DB_NAME = "arasaka_academy"
 DB_TABLE = "students"  # "students" or "professors"
 
 SERVICE_HOST = "127.0.0.1"  # where the binary is exposed
-SERVICE_PORT = 31337  # service TCP port
+SERVICE_PORT = 1337  # service TCP port
 CONNECT_TIMEOUT = 5
 # ---------------
 
