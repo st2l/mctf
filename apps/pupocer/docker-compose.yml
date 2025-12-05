@@ -40,15 +40,15 @@ services:
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootapp_bigballscow
+      MYSQL_ROOT_PASSWORD: cowwithballs
       MYSQL_DATABASE: db
       MYSQL_USER: app_user
-      MYSQL_PASSWORD: bigballscow
+      MYSQL_PASSWORD: cowwithballs
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pcowwithballs"]
       interval: 10s
       timeout: 5s
       retries: 5

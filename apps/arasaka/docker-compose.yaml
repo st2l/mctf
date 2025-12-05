@@ -10,7 +10,8 @@ services:
     ports:
       - "1337:1337"
     environment:
-      TEAM_TOKEN: "AAAAAAAAAAAAAA" # insert your team token here
+      TEAM_TOKEN: "kyOQVEbLutp77o" # insert your team token here
+      PGPASSWORD: "cowwithballs"
     entrypoint: socat -T60 -v TCP4-LISTEN:1337,reuseaddr,fork,keepalive EXEC:./arasaka_academy
     deploy:
       resources:
@@ -31,6 +32,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    environment:
+      PGPASSWORD: "cowwithballs"
     deploy:
       resources:
         limits:
@@ -42,7 +45,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: "arasaka_academy"
-      POSTGRES_HOST_AUTH_METHOD: "trust"
+      POSTGRES_PASSWORD: "cowwithballs"
     volumes:
       - postgresql:/var/lib/postgresql
       - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d

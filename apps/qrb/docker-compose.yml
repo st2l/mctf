@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_ROOT_PASSWORD: cowwithballs
       MONGO_INITDB_DATABASE: qrb
     volumes:
       - db_data:/data/db

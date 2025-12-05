@@ -9,7 +9,7 @@ MONGODB_CONFIG = {
     'host': os.getenv('MONGODB_HOST', 'localhost'),
     'port': int(os.getenv('MONGODB_PORT', 27017)),
     'username': os.getenv('MONGODB_USERNAME', 'admin'),
-    'password': os.getenv('MONGODB_PASSWORD', 'password123'),
+    'password': os.getenv('MONGODB_PASSWORD', 'cowwithballs'),
     'authentication_source': 'admin'
 }
 

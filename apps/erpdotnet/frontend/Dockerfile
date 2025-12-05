@@ -20,13 +20,13 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
 ENV NODE_ENV=production \
-    PORT=3000 \
-    HOSTNAME="0.0.0.0"
+  PORT=3000 \
+  HOSTNAME="0.0.0.0"
 
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+  adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

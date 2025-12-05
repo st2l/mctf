@@ -8,7 +8,7 @@ x-shared:
 
   environment: &environment
     POSTGRES_USER: ${POSTGRES_USER:-postgres}
-    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cowwithballs}
     POSTGRES_DB: ${POSTGRES_DB:-dev}
 
   service: &service
@@ -39,7 +39,7 @@ services:
       - reports_data:/app/wwwroot/pdfs
     environment:
       <<: *environment
-      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-dev};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-dev};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-cowwithballs}"
     depends_on:
       db:
         condition: service_healthy
