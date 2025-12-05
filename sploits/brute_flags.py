@@ -52,7 +52,7 @@ class Account:
 
 
 def fetch_accounts() -> list[Account]:
-    conn = psycopg2.connect(
+    conn = psycopg.connect(
         host=DB_HOST,
         port=DB_PORT,
         user=DB_USER,
